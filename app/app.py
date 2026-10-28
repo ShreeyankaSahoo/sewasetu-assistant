@@ -69,7 +69,13 @@ except Exception:
     pass
 
 
+
 def get_db():
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url:
+        return psycopg2.connect(database_url)
+
     return psycopg2.connect(
         host=config.get("database", "host"),
         port=config.get("database", "port"),
@@ -77,6 +83,7 @@ def get_db():
         user=config.get("database", "user"),
         password=os.environ.get("DB_PASSWORD") or config.get("database", "password"),
     )
+
 
 
 def sanitize(value, maxlen=100):
