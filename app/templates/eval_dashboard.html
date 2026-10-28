@@ -1,0 +1,151 @@
+
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.eval-wrap { max-width: 1100px; margin: 0 auto; }
+.eval-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 20px 0; }
+.eval-card { border: 1px solid #d9dee7; border-radius: 10px; padding: 16px; margin: 16px 0; background: #fff; }
+.eval-number { font-size: 28px; font-weight: 700; margin: 6px 0; }
+.eval-muted { color: #5c6675; font-size: 14px; }
+.eval-pass { color: #18794e; font-weight: 700; }
+.eval-fail { color: #b42318; font-weight: 700; }
+.eval-pill { display: inline-block; border-radius: 20px; padding: 4px 9px; font-size: 12px; background: #edf2f7; }
+.eval-detail { background: #f6f8fa; padding: 12px; border-radius: 7px; margin: 8px 0; overflow-wrap: anywhere; }
+.eval-detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.eval-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.eval-table th, .eval-table td { text-align: left; border-bottom: 1px solid #e5e7eb; padding: 9px; vertical-align: top; }
+@media (max-width: 650px) {
+  .eval-table { font-size: 13px; }
+  .eval-table th, .eval-table td { padding: 6px; }
+}
+</style>
+
+<div class="eval-wrap">
+  <h2>Seva Setu — Evaluation Dashboard</h2>
+  <p class="eval-muted">
+    Evidence from the citizen and block-officer MCP servers. Results are read
+    from the evaluation runner's JSON output.
+  </p>
+
+  {% if results and results.summary %}
+
+  <p>
+    <span class="eval-pill">{{ results.environment }}</span>
+    <span class="eval-pill">Generated: {{ results.generated_at }}</span>
+  </p>
+
+  <div class="eval-stats">
+    <div class="eval-card">
+      <div class="eval-muted">Scenario pass rate</div>
+      <div class="eval-number">{{ results.summary.passed_scenarios }}/{{ results.summary.total_scenarios }}</div>
+      <div>{{ results.summary.failed_scenarios }} failed scenarios</div>
+    </div>
+    <div class="eval-card">
+      <div class="eval-muted">Assertion pass rate</div>
+      <div class="eval-number">{{ results.summary.pass_rate_percent }}%</div>
+      <div>{{ results.summary.passed_assertions }}/{{ results.summary.total_assertions }} assertions passed</div>
+    </div>
+    <div class="eval-card">
+      <div class="eval-muted">Evaluation scenarios</div>
+      <div class="eval-number">{{ results.evaluations | length }}</div>
+      <div>Scripted MCP workflows</div>
+    </div>
+  </div>
+
+  <div class="eval-card">
+    <h3>Evaluation method and limitations</h3>
+    <p>{{ results.evaluation_method }}</p>
+    <p>{{ results.document_fixture_note }}</p>
+    <p class="eval-muted">
+      A passing scripted test confirms the tested workflow and assertions only.
+      It is not a guarantee of overall system correctness or a substitute for
+      the independent evaluations performed by reviewers.
+    </p>
+  </div>
+
+  <div class="eval-card">
+    <h3>Fictional citizen personas</h3>
+
+    {% for persona in results.personas %}
+    <div class="eval-detail">
+      <h4>{{ persona.name }} — {{ persona.age }} years old</h4>
+      <p><strong>Village:</strong> {{ persona.village }}</p>
+      <p><strong>Block:</strong> {{ persona.block }}</p>
+      <p><strong>How they communicate:</strong> {{ persona.voice }}</p>
+      <p><strong>Goal:</strong> {{ persona.goal }}</p>
+      <p><strong>Expected database state:</strong> {{ persona.expected_database_state }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h3>Scenario results</h3>
+
+  {% for case in results.evaluations %}
+  <div class="eval-card">
+    <h3>{{ case.id }} — {{ case.persona }}</h3>
+    <p>{{ case.scenario }}</p>
+    {% if case.passed %}
+      <p class="eval-pass">PASS — All recorded assertions passed</p>
+    {% else %}
+      <p class="eval-fail">FAIL — One or more assertions failed</p>
+    {% endif %}
+
+    <h4>Assertions and database checks</h4>
+    <table class="eval-table">
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Expected</th>
+          <th>Actual</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for assertion in case.assertions %}
+        <tr>
+          <td>{{ assertion.name }}</td>
+          <td><code>{{ assertion.expected | tojson }}</code></td>
+          <td><code>{{ assertion.actual | tojson }}</code></td>
+          <td>
+            {% if assertion.passed %}
+              <span class="eval-pass">PASS</span>
+            {% else %}
+              <span class="eval-fail">FAIL</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h4>Tool-call evidence</h4>
+    {% for item in case.transcript %}
+    <details class="eval-detail">
+      <summary>{{ item.actor }} — {{ item.tool }}</summary>
+      <pre>{{ item.result | tojson(indent=2) }}</pre>
+    </details>
+    {% else %}
+    <p class="eval-muted">No tool-call results recorded for this scenario.</p>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="eval-card">
+    <h3>Evaluation results are not available</h3>
+    <p>
+      The dashboard could not find a valid evaluation summary. Run the
+      evaluation runner and check that its results file is mounted correctly.
+    </p>
+  </div>
+  {% endif %}
+
+  <p class="eval-muted">
+    This page is intended to report synthetic evaluation data. Do not place
+    real applicant documents, credentials, or private applicant information
+    in evaluation transcripts.
+  </p>
+</div>
+
+{% endblock %}

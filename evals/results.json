@@ -1,0 +1,424 @@
+{
+  "title": "Sewa Setu MCP Evaluation Results",
+  "generated_at": "2026-10-28T14:36:48.770538+00:00",
+  "environment": "Local Docker development environment",
+  "evaluation_method": "Scripted tool-level tests using the Python MCP client and direct PostgreSQL assertions. These are not transcripts from a free-form LLM conversation.",
+  "document_fixture_note": "The uploaded PDF is synthetic test data, not a genuine age proof. Portal upload currently checks filename extension and size; this test does not validate document authenticity.",
+  "personas": [
+    {
+      "name": "Mina Das",
+      "age": 76,
+      "village": "Sonari Basti",
+      "block": "Sonari",
+      "voice": "Polite and direct; wants help applying for the pension.",
+      "goal": "Submit an eligible application successfully.",
+      "expected_database_state": "One PENDING application for the synthetic test mobile."
+    },
+    {
+      "name": "Ranjit Bora",
+      "age": 51,
+      "village": "Rajapara",
+      "block": "Rajapara",
+      "voice": "Impatient; wants to submit despite not meeting the age threshold.",
+      "goal": "Ensure the portal rejects an underage application and invalid bank number.",
+      "expected_database_state": "No application for the synthetic test mobile."
+    },
+    {
+      "name": "Kamala Saikia",
+      "age": 68,
+      "village": "Namti Gaon",
+      "block": "Namti",
+      "voice": "Careful and respectful; wants to apply and receive a clear outcome.",
+      "goal": "Submit successfully, then verify an officer decision and audit reason.",
+      "expected_database_state": "One REJECTED application with officer identity and reason recorded."
+    }
+  ],
+  "evaluations": [
+    {
+      "id": "CIT-001",
+      "persona": "Mina Das, 76, Sonari Basti",
+      "scenario": "Eligible applicant submits an old-age pension application.",
+      "transcript": [
+        {
+          "actor": "citizen",
+          "tool": "check_eligibility",
+          "result": {
+            "age": 76,
+            "minimum_age": 60,
+            "eligible_by_age": true,
+            "valid_block": true,
+            "valid_blocks": [
+              "Sonari",
+              "Rajapara",
+              "Dhemaji Pathar",
+              "Borgaon",
+              "Namti",
+              "Khelua"
+            ],
+            "village_provided": true,
+            "application_window_open": true,
+            "application_deadline": "2026-10-31T23:59:00",
+            "preliminary_checks_passed": true,
+            "message": "Preliminary checks passed. Full portal validation and age proof are still required."
+          }
+        },
+        {
+          "actor": "citizen",
+          "tool": "upload_age_proof",
+          "result": {
+            "success": true,
+            "document_id": "0000000101_cc039b2da58a4c44a46f2d01f7671d63.pdf",
+            "bytes_received": 103,
+            "message": "Document uploaded. Keep the document_id and use it to submit your pension application."
+          }
+        },
+        {
+          "actor": "citizen",
+          "tool": "submit_application",
+          "result": {
+            "success": true,
+            "submitted": true,
+            "application_number": "SSP26337058",
+            "status": "PENDING",
+            "message": "Your application has been submitted to Sewa Setu."
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "Preliminary eligibility passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Synthetic fixture upload succeeded",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Submission succeeded",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Application number returned",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Application exists in database",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Database application number matches",
+          "expected": "SSP26337058",
+          "actual": "SSP26337058",
+          "passed": true
+        },
+        {
+          "name": "Database status is PENDING",
+          "expected": "PENDING",
+          "actual": "PENDING",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "CIT-002",
+      "persona": "Ranjit Bora, 51, Rajapara",
+      "scenario": "Underage applicant supplies an invalid bank account.",
+      "transcript": [
+        {
+          "actor": "citizen",
+          "tool": "check_eligibility",
+          "result": {
+            "age": 51,
+            "minimum_age": 60,
+            "eligible_by_age": false,
+            "valid_block": true,
+            "valid_blocks": [
+              "Sonari",
+              "Rajapara",
+              "Dhemaji Pathar",
+              "Borgaon",
+              "Namti",
+              "Khelua"
+            ],
+            "village_provided": true,
+            "application_window_open": true,
+            "application_deadline": "2026-10-31T23:59:00",
+            "preliminary_checks_passed": false,
+            "message": "One or more preliminary checks failed."
+          }
+        },
+        {
+          "actor": "citizen",
+          "tool": "upload_age_proof",
+          "result": {
+            "success": true,
+            "document_id": "0000000102_704f5a48cc744648ab7a8b832c286b74.pdf",
+            "bytes_received": 103,
+            "message": "Document uploaded. Keep the document_id and use it to submit your pension application."
+          }
+        },
+        {
+          "actor": "citizen",
+          "tool": "submit_application",
+          "result": {
+            "success": false,
+            "submitted": false,
+            "validation_errors": [
+              "bank account number must be 9 to 18 digits",
+              "applicant must be 60 years of age or above"
+            ],
+            "message": "The portal rejected the application. Correct the listed issues."
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "Underage preliminary eligibility fails",
+          "expected": false,
+          "actual": false,
+          "passed": true
+        },
+        {
+          "name": "Synthetic fixture upload succeeded",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Submission was blocked",
+          "expected": false,
+          "actual": false,
+          "passed": true
+        },
+        {
+          "name": "Age validation error returned",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Bank-number validation error returned",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "No application was created",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "OFF-001",
+      "persona": "Kamala Saikia, 68, Namti Gaon",
+      "scenario": "Officer inspects an application and rejects it with an explicit reason.",
+      "transcript": [
+        {
+          "actor": "citizen",
+          "tool": "check_eligibility",
+          "result": {
+            "age": 68,
+            "minimum_age": 60,
+            "eligible_by_age": true,
+            "valid_block": true,
+            "valid_blocks": [
+              "Sonari",
+              "Rajapara",
+              "Dhemaji Pathar",
+              "Borgaon",
+              "Namti",
+              "Khelua"
+            ],
+            "village_provided": true,
+            "application_window_open": true,
+            "application_deadline": "2026-10-31T23:59:00",
+            "preliminary_checks_passed": true,
+            "message": "Preliminary checks passed. Full portal validation and age proof are still required."
+          }
+        },
+        {
+          "actor": "citizen",
+          "tool": "upload_age_proof",
+          "result": {
+            "success": true,
+            "document_id": "0000000103_4a43809f4c5b491e899c7ac939b76204.pdf",
+            "bytes_received": 103,
+            "message": "Document uploaded. Keep the document_id and use it to submit your pension application."
+          }
+        },
+        {
+          "actor": "citizen",
+          "tool": "submit_application",
+          "result": {
+            "success": true,
+            "submitted": true,
+            "application_number": "SSP26790386",
+            "status": "PENDING",
+            "message": "Your application has been submitted to Sewa Setu."
+          }
+        },
+        {
+          "actor": "officer",
+          "tool": "list_pending_applications",
+          "result": {
+            "success": true,
+            "count": 1,
+            "applications": [
+              {
+                "application_number": "SSP26790386",
+                "applicant_name": "Kamala Saikia",
+                "date_of_birth": "1958-05-05",
+                "village": "Namti Gaon",
+                "block": "Namti",
+                "submitted_at": "2026-10-28T14:36:51.400084"
+              }
+            ]
+          }
+        },
+        {
+          "actor": "officer",
+          "tool": "inspect_application",
+          "result": {
+            "success": true,
+            "found": true,
+            "application": {
+              "application_number": "SSP26790386",
+              "applicant_name": "Kamala Saikia",
+              "mobile": "0000000103",
+              "date_of_birth": "1958-05-05",
+              "gender": "Female",
+              "marital_status": "Widowed",
+              "husband_name": "",
+              "village": "Namti Gaon",
+              "block": "Namti",
+              "bank_account": "123456789013",
+              "ifsc": "SBIN0003077",
+              "age_proof_on_file": true,
+              "status": "PENDING",
+              "submitted_at": "2026-10-28T14:36:51.400084",
+              "decided_at": null,
+              "decided_by": null
+            },
+            "audit_history": [
+              {
+                "at": "2026-10-28T14:36:51.402737",
+                "action": "SUBMIT",
+                "actor": "applicant:0000000103",
+                "reason": ""
+              }
+            ]
+          }
+        },
+        {
+          "actor": "officer",
+          "tool": "decide_application",
+          "result": {
+            "success": true,
+            "application_number": "SSP26790386",
+            "decision": "REJECTED",
+            "decided_by": "local-evaluation-officer",
+            "reason_recorded": "Synthetic evaluation case: rejection workflow verification.",
+            "message": "The decision was saved to the portal and audit log."
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "Preliminary eligibility passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Synthetic fixture upload succeeded",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Submission succeeded",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Application number returned",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Application exists in database",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Database application number matches",
+          "expected": "SSP26790386",
+          "actual": "SSP26790386",
+          "passed": true
+        },
+        {
+          "name": "Officer can see the pending test application",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Officer can inspect application",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Officer decision tool succeeded",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "Database status is REJECTED",
+          "expected": "REJECTED",
+          "actual": "REJECTED",
+          "passed": true
+        },
+        {
+          "name": "Officer identity stored in database",
+          "expected": "local-evaluation-officer",
+          "actual": "local-evaluation-officer",
+          "passed": true
+        },
+        {
+          "name": "Rejection reason appears in audit log",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "summary": {
+    "total_scenarios": 3,
+    "passed_scenarios": 3,
+    "failed_scenarios": 0,
+    "total_assertions": 25,
+    "passed_assertions": 25,
+    "pass_rate_percent": 100.0
+  }
+}
