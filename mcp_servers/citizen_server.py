@@ -78,12 +78,14 @@ def current_citizen() -> tuple[dict, str]:
     return claims, mobile
 
 
+
 class SewaSetuCitizenTokenVerifier(TokenVerifier):
     """MCP SDK verifier for citizen-only Sewa Setu tokens."""
 
     async def verify_token(self, token: str) -> AccessToken | None:
         try:
             claims = decode_portal_token(token)
+
             return AccessToken(
                 token=token,
                 client_id=str(claims.get("client_id", "")),
@@ -91,12 +93,15 @@ class SewaSetuCitizenTokenVerifier(TokenVerifier):
                 expires_at=int(claims["exp"]),
                 resource=AUDIENCE,
             )
+
         except Exception as exc:
             logger.warning(
-                "Citizen token verification failed: %s",
+                "Citizen token verification failed: %s: %s",
                 type(exc).__name__,
+                str(exc),
             )
             return None
+
 
 
 mcp = FastMCP(
