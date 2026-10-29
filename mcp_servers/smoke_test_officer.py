@@ -1,8 +1,10 @@
-﻿import asyncio
+﻿
+import asyncio
 import json
 import sys
 
-sys.path.insert(0, "/app")
+sys.path.insert(0, "/workspace/app")
+
 import app as portal
 import oauth
 
@@ -15,14 +17,14 @@ async def main():
         subject="officer:local-smoke-test",
         role="officer",
         scope="officer",
-        audience="http://localhost:8002",
+        audience="https://sewasetu-officer-mcp-f22a.onrender.com",
         client_id="local-officer-smoke-test",
     )
 
     headers = {"Authorization": f"Bearer {token}"}
 
     async with streamablehttp_client(
-        "http://officer-mcp:8002/mcp",
+        "https://sewasetu-officer-mcp-f22a.onrender.com/mcp",
         headers=headers,
     ) as (read_stream, write_stream, _):
         async with ClientSession(read_stream, write_stream) as session:
@@ -39,7 +41,11 @@ async def main():
             )
 
             text_result = next(
-                (item.text for item in result.content if hasattr(item, "text")),
+                (
+                    item.text
+                    for item in result.content
+                    if hasattr(item, "text")
+                ),
                 "{}",
             )
             data = json.loads(text_result)

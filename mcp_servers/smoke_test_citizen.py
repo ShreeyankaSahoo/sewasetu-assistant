@@ -1,7 +1,7 @@
 ﻿import asyncio
 import sys
 
-sys.path.insert(0, "/app")
+sys.path.insert(0, "/workspace/app")
 import app as portal
 import oauth
 
@@ -14,14 +14,14 @@ async def main():
         subject="citizen:0000000000",
         role="citizen",
         scope="citizen",
-        audience="http://localhost:8001",
+        audience="https://sewasetu-citizen-mcp-l9h2.onrender.com",
         client_id="local-smoke-test",
     )
 
     headers = {"Authorization": f"Bearer {token}"}
 
     async with streamablehttp_client(
-        "http://citizen-mcp:8001/mcp",
+       "https://sewasetu-citizen-mcp-l9h2.onrender.com/mcp",
         headers=headers,
     ) as (read_stream, write_stream, _):
         async with ClientSession(read_stream, write_stream) as session:
