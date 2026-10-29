@@ -572,7 +572,9 @@ def reset_password():
 @app.route("/eval-dashboard")
 def eval_dashboard():
     """Display scripted MCP evaluation results."""
-    results_path = os.path.join(BASE_DIR, "evals", "results.json")
+    results_path = os.path.join(
+    os.path.dirname(BASE_DIR), "evals", "results.json"
+)
     results = None
 
     try:
